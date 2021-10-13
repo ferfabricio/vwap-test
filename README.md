@@ -32,3 +32,36 @@ simple print is perfect for this project.
 
 The volume-weighted average price (VWAP) is a trading benchmark used by traders that gives the average price a security has traded at throughout the day, based on both volume and price. VWAP is important because it provides traders with insight into both the trend and value of a security.
 
+## Integration details
+
+### Coinbase
+
+- Structure of subscribe message
+
+```json
+{
+    "type": "subscribe",
+    "product_ids": [
+        "ETH-USD",
+        "ETH-EUR"
+    ],
+    "channels": ["matches"]
+}
+```
+
+- Return of subscription call
+
+```json
+{
+    "type": "subscriptions",
+    "channels": [
+        {
+            "name": "matches",
+            "product_ids": [
+                "ETH-USD",
+                "ETH-EUR"
+            ]
+        }
+    ]
+}
+```
