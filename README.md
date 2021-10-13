@@ -65,3 +65,13 @@ The volume-weighted average price (VWAP) is a trading benchmark used by traders 
     ]
 }
 ```
+
+- Error
+
+```json
+{
+    "type": "error",
+    "message": "Failed to subscribe",
+    "reason": "Type has to be either subscribe or unsubscribe"
+}
+```

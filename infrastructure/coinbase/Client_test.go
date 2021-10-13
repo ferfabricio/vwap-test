@@ -1,6 +1,7 @@
 package coinbase
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -18,27 +19,64 @@ func TestCreateNewClient(t *testing.T) {
 }
 
 func TestConfiguration(t *testing.T) {
-	m := SubscriptionResult{
-		Type: "subscriptions",
-		Channels: []ChannelSubscription{
-			{
-				Name: "matches",
-				ProductIds: []string{
-					"ETH-USD",
-					"ETH-EUR",
+	t.Run("With success", func(t *testing.T) {
+		m := SubscriptionResult{
+			Type: "subscriptions",
+			Channels: []ChannelSubscription{
+				{
+					Name: "matches",
+					ProductIds: []string{
+						"ETH-USD",
+						"ETH-EUR",
+					},
 				},
 			},
-		},
-	}
-	s := createTestWs(t, wsMockIgnoreReceived(m))
-	c := Client{
-		conn: s,
-	}
-	err := c.Configure([]string{"ETH-USD", "ETH-EUR"})
-	if err != nil {
-		t.Error(err)
-	}
-	defer s.Close()
+		}
+		s := createTestWs(t, wsMockIgnoreReceived(m))
+		c := Client{
+			conn: s,
+		}
+		err := c.Configure([]string{"ETH-USD", "ETH-EUR"})
+		if err != nil {
+			t.Error(err)
+		}
+		defer s.Close()
+	})
+
+	t.Run("With error", func(t *testing.T) {
+		m := GenericResult{
+			Type:    "error",
+			Message: "Failed to subscribe",
+			Reason:  "Type has to be either subscribe or unsubscribe",
+		}
+		s := createTestWs(t, wsMockIgnoreReceived(m))
+		c := Client{
+			conn: s,
+		}
+		err := c.Configure([]string{"ETH-USD", "ETH-EUR"})
+		if err.Error() != m.Message {
+			t.Fail()
+		}
+		defer s.Close()
+	})
+
+	t.Run("With connection error", func(t *testing.T) {
+		s := createTestWs(t, func(w http.ResponseWriter, r *http.Request) {
+			c, err := upgrader.Upgrade(w, r, nil)
+			if err != nil {
+				t.Log(err)
+			}
+			defer c.Close()
+		})
+		c := Client{
+			conn: s,
+		}
+		err := c.Configure([]string{"ETH-USD", "ETH-EUR"})
+		if err.Error() != "error to receive data from Coinbase WS" {
+			t.Error(err)
+		}
+		defer s.Close()
+	})
 }
 
 var upgrader = websocket.Upgrader{}
@@ -60,7 +98,7 @@ func createTestWs(t *testing.T, r http.HandlerFunc) *websocket.Conn {
 	return ws
 }
 
-func wsMockIgnoreReceived(r interface{}) http.HandlerFunc {
+func wsMockIgnoreReceived(re interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -73,8 +111,9 @@ func wsMockIgnoreReceived(r interface{}) http.HandlerFunc {
 				break
 			}
 
-			err = c.WriteJSON(r)
+			err = c.WriteJSON(re)
 			if err != nil {
+				fmt.Println(err.Error())
 				break
 			}
 		}

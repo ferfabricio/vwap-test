@@ -1,6 +1,7 @@
 package coinbase
 
 import (
+	"errors"
 	"log"
 
 	"github.com/gorilla/websocket"
@@ -25,6 +26,13 @@ type ChannelSubscription struct {
 
 type SubscriptionResult struct {
 	Type     string                `json:"type"`
+	Channels []ChannelSubscription `json:"channels"`
+}
+
+type GenericResult struct {
+	Type     string                `json:"type"`
+	Message  string                `json:"message"`
+	Reason   string                `json:"reason"`
 	Channels []ChannelSubscription `json:"channels"`
 }
 
@@ -78,7 +86,18 @@ func (c Client) Configure(p []string) error {
 		Channels:   []string{matchesChannel},
 	})
 	if err != nil {
-		log.Fatal("Error to connect in WS", err)
+		log.Println(err)
+		return err
+	}
+
+	r := GenericResult{}
+	if err = c.conn.ReadJSON(&r); err != nil {
+		log.Println(err)
+		return errors.New("error to receive data from Coinbase WS")
+	}
+
+	if r.Type == "error" {
+		err = errors.New(r.Message)
 	}
 
 	return err
