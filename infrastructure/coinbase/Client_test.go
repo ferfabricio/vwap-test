@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// TODO: this test will connect in the coinbase, can be an anti-pattern
 func TestCreateNewClient(t *testing.T) {
 	_, err := NewClient()
 	if err != nil {
@@ -17,7 +18,19 @@ func TestCreateNewClient(t *testing.T) {
 }
 
 func TestConfiguration(t *testing.T) {
-	s := createTestWs(t)
+	m := SubscriptionResult{
+		Type: "subscriptions",
+		Channels: []ChannelSubscription{
+			{
+				Name: "matches",
+				ProductIds: []string{
+					"ETH-USD",
+					"ETH-EUR",
+				},
+			},
+		},
+	}
+	s := createTestWs(t, wsMockIgnoreReceived(m))
 	c := Client{
 		conn: s,
 	}
@@ -30,9 +43,9 @@ func TestConfiguration(t *testing.T) {
 
 var upgrader = websocket.Upgrader{}
 
-func createTestWs(t *testing.T) *websocket.Conn {
+func createTestWs(t *testing.T, r http.HandlerFunc) *websocket.Conn {
 	// Create test server with the echo handler.
-	s := httptest.NewServer(http.HandlerFunc(wsConfigMock))
+	s := httptest.NewServer(http.HandlerFunc(r))
 	defer s.Close()
 
 	// Convert http://127.0.0.1 to ws://127.0.0.
@@ -47,34 +60,23 @@ func createTestWs(t *testing.T) *websocket.Conn {
 	return ws
 }
 
-func wsConfigMock(w http.ResponseWriter, r *http.Request) {
-	c, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		return
-	}
-	defer c.Close()
-	for {
-		_, _, err := c.ReadMessage()
+func wsMockIgnoreReceived(r interface{}) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		c, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			break
+			return
 		}
+		defer c.Close()
+		for {
+			_, _, err := c.ReadMessage()
+			if err != nil {
+				break
+			}
 
-		m := SubscriptionResult{
-			Type: "subscriptions",
-			Channels: []ChannelSubscription{
-				{
-					Name: "matches",
-					ProductIds: []string{
-						"ETH-USD",
-						"ETH-EUR",
-					},
-				},
-			},
-		}
-
-		err = c.WriteJSON(m)
-		if err != nil {
-			break
+			err = c.WriteJSON(r)
+			if err != nil {
+				break
+			}
 		}
 	}
 }
