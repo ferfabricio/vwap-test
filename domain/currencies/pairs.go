@@ -1,4 +1,4 @@
-package vwap
+package currencies
 
 const (
 	BitcoinDollar   = "BTC-USD"
