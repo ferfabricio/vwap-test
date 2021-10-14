@@ -21,12 +21,12 @@ func TestAddTrade(t *testing.T) {
 			Pairs: map[string]CalculationUnit{},
 		}
 		v.AddPair(BitcoinDollar)
-		err := v.AddTrade(BitcoinDollar, 10.1, 1.2)
+		err := v.AddTrade(BitcoinDollar, 3438.23, 0.05)
 		if err != nil {
 			t.Error(err)
 		}
 		p := v.Pairs[BitcoinDollar]
-		if p.TotalPrice != 10.1 && p.TotalQuantity != 1.2 {
+		if p.TotalPrice != 3438.23 && p.TotalQuantity != 0.05 {
 			t.Fail()
 		}
 	})
