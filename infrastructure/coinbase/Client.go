@@ -10,9 +10,8 @@ import (
 )
 
 const (
-	errorType      = "error"
 	matchesChannel = "matches"
-	matchType      = "match"
+	MatchType      = "match"
 	subscribeType  = "subscribe"
 	url            = "wss://ws-feed.exchange.coinbase.com"
 )
@@ -82,7 +81,6 @@ func (c Client) Configure(p []string) error {
 }
 
 func (c Client) GetData(ch chan MatchMessage) {
-	defer c.conn.Close()
 	for {
 		m := MatchMessage{}
 		err := c.conn.ReadJSON(&m)

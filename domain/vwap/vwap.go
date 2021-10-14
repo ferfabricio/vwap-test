@@ -11,19 +11,27 @@ type VWAPConfig struct {
 }
 
 type DataPoint struct {
-	Price    float32
-	Quantity float32
+	Price    float64
+	Quantity float64
 }
 type CalculationUnit struct {
-	TotalPricePlusQuantity float32
-	TotalQuantity          float32
-	Result                 float32
+	TotalPricePlusQuantity float64
+	TotalQuantity          float64
+	Result                 float64
 	DataPoints             []DataPoint
 }
 
 type Vwap struct {
-	Pairs  map[string]CalculationUnit
-	Length int
+	Pairs               map[string]CalculationUnit
+	Length              int
+	NotificationChannel chan CalculationEvent
+}
+
+type CalculationEvent struct {
+	Pair     string
+	Price    float64
+	Quantity float64
+	VWAP     float64
 }
 
 func (v Vwap) AddPair(key string) {
@@ -35,7 +43,7 @@ func (v Vwap) AddPair(key string) {
 	}
 }
 
-func calculateVwapResult(tp float32, tq float32) float32 {
+func calculateVwapResult(tp float64, tq float64) float64 {
 	return tp / tq
 }
 
@@ -50,10 +58,11 @@ func calculateTotalsInPair(p *CalculationUnit, dp DataPoint, l int) *Calculation
 	p.TotalPricePlusQuantity += (dp.Price * dp.Quantity)
 	p.TotalQuantity += dp.Quantity
 	p.Result = calculateVwapResult(p.TotalPricePlusQuantity, p.TotalQuantity)
+
 	return p
 }
 
-func (v Vwap) AddTrade(key string, price float32, quantity float32) error {
+func (v Vwap) AddTrade(key string, price float64, quantity float64) error {
 	p, ok := v.Pairs[key]
 	if !ok {
 		return errors.New("initilize the pair before add trades")
@@ -65,10 +74,20 @@ func (v Vwap) AddTrade(key string, price float32, quantity float32) error {
 	}
 
 	v.Pairs[key] = *calculateTotalsInPair(&p, dp, v.Length)
+
+	if v.NotificationChannel != nil {
+		v.NotificationChannel <- CalculationEvent{
+			Pair:     key,
+			Price:    price,
+			Quantity: quantity,
+			VWAP:     v.Pairs[key].Result,
+		}
+	}
+
 	return nil
 }
 
-func (v Vwap) GetResult(key string) (float32, error) {
+func (v Vwap) GetResult(key string) (float64, error) {
 	p, ok := v.Pairs[key]
 	if !ok {
 		return 0, errors.New("pair not present")
@@ -84,5 +103,16 @@ func New() *Vwap {
 	return &Vwap{
 		Pairs:  map[string]CalculationUnit{},
 		Length: c.Length,
+	}
+}
+
+func NewWithNotification(en chan CalculationEvent) *Vwap {
+	c := VWAPConfig{
+		Length: defaultLength,
+	}
+	return &Vwap{
+		Pairs:               map[string]CalculationUnit{},
+		Length:              c.Length,
+		NotificationChannel: en,
 	}
 }

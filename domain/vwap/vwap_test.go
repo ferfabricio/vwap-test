@@ -27,7 +27,7 @@ func TestAddTrade(t *testing.T) {
 			t.Error(err)
 		}
 		p := v.Pairs[currencies.BitcoinDollar]
-		if p.TotalPricePlusQuantity != 171.9115 || p.TotalQuantity != 0.05 {
+		if float32(p.TotalPricePlusQuantity) != 171.9115 || float32(p.TotalQuantity) != 0.05 {
 			t.Fail()
 		}
 	})
@@ -45,7 +45,7 @@ func TestVWAPCalcalationResult(t *testing.T) {
 	sc := []struct {
 		length    int
 		dps       []DataPoint
-		expResult float32
+		expResult float64
 	}{
 		{
 			length: 2,
@@ -75,7 +75,7 @@ func TestVWAPCalcalationResult(t *testing.T) {
 				{Price: 3438.22, Quantity: 0.08},
 				{Price: 3438.26, Quantity: 0.09},
 			},
-			expResult: 3438.241699,
+			expResult: 3438.241176,
 		},
 	}
 	for _, s := range sc {
@@ -90,7 +90,7 @@ func TestVWAPCalcalationResult(t *testing.T) {
 				t.Fail()
 			}
 		}
-		if vf, _ := v.GetResult(currencies.BitcoinDollar); vf != s.expResult {
+		if vf, _ := v.GetResult(currencies.BitcoinDollar); float32(vf) != float32(s.expResult) {
 			t.Errorf("expected result %f, is different from calculated %f", s.expResult, vf)
 		}
 	}
