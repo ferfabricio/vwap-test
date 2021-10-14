@@ -15,10 +15,10 @@ clean:
 #   Usage:
 #       make test
 test:
-	docker run -w /app -v ${ROOT}:/app ${GOLANG_DOCKER_IMAGE} go test ./... -coverprofile=${GO_TEST_OUTFILE}
-	docker run -w /app -v ${ROOT}:/app ${GOLANG_DOCKER_IMAGE} go tool cover -html=${GO_TEST_OUTFILE} -o ${GO_HTML_COV}
+	docker run --tty -it -w /app -v ${ROOT}:/app ${GOLANG_DOCKER_IMAGE} go test ./... -coverprofile=${GO_TEST_OUTFILE}
+	docker run --tty -it -w /app -v ${ROOT}:/app ${GOLANG_DOCKER_IMAGE} go tool cover -html=${GO_TEST_OUTFILE} -o ${GO_HTML_COV}
 
 #   Usage:
 #       make run
 run:
-	docker run -w /app -v ${ROOT}:/app ${GOLANG_DOCKER_IMAGE} go run main.go
+	docker run --tty -it -w /app -v ${ROOT}:/app ${GOLANG_DOCKER_IMAGE} go run main.go
