@@ -57,6 +57,7 @@ type Client struct {
 }
 
 func (c Client) Configure(p []string) error {
+	// Send a subscription message to Coinbase
 	err := c.conn.WriteJSON(SubscribeMessage{
 		Type:       subscribeType,
 		ProductIds: p,
@@ -82,6 +83,7 @@ func (c Client) Configure(p []string) error {
 
 func (c Client) GetData(ch chan MatchMessage) {
 	for {
+		// Read messages from WS and publish on the channel
 		m := MatchMessage{}
 		err := c.conn.ReadJSON(&m)
 		if err != nil {
@@ -94,6 +96,7 @@ func (c Client) GetData(ch chan MatchMessage) {
 	}
 }
 
+// Create the client with the default configuration
 func NewClient() (*Client, error) {
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {

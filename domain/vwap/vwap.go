@@ -49,11 +49,13 @@ func calculateVwapResult(tp float64, tq float64) float64 {
 
 func calculateTotalsInPair(p *CalculationUnit, dp DataPoint, l int) *CalculationUnit {
 	if len(p.DataPoints) == l {
+		// Remove first item from the array and the related value from the Calculation Unit
 		f, pda := p.DataPoints[0], p.DataPoints[1:]
 		p.TotalPricePlusQuantity -= (f.Price * f.Quantity)
 		p.TotalQuantity -= f.Quantity
 		p.DataPoints = pda
 	}
+	// Add the actual pair to the collection and update the calculation
 	p.DataPoints = append(p.DataPoints, dp)
 	p.TotalPricePlusQuantity += (dp.Price * dp.Quantity)
 	p.TotalQuantity += dp.Quantity
@@ -73,8 +75,10 @@ func (v Vwap) AddTrade(key string, price float64, quantity float64) error {
 		Quantity: quantity,
 	}
 
+	// Update the pair calculation
 	v.Pairs[key] = *calculateTotalsInPair(&p, dp, v.Length)
 
+	// If the notification channel it is configured send a message
 	if v.NotificationChannel != nil {
 		v.NotificationChannel <- CalculationEvent{
 			Pair:     key,
@@ -87,6 +91,7 @@ func (v Vwap) AddTrade(key string, price float64, quantity float64) error {
 	return nil
 }
 
+// Get VWAP calculation result
 func (v Vwap) GetResult(key string) (float64, error) {
 	p, ok := v.Pairs[key]
 	if !ok {
@@ -96,6 +101,7 @@ func (v Vwap) GetResult(key string) (float64, error) {
 	return p.Result, nil
 }
 
+// Create new VWAP instance
 func New() *Vwap {
 	c := VWAPConfig{
 		Length: defaultLength,
@@ -106,6 +112,7 @@ func New() *Vwap {
 	}
 }
 
+// Helper function used in tests
 func NewWithNotification(en chan CalculationEvent) *Vwap {
 	c := VWAPConfig{
 		Length: defaultLength,
