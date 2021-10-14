@@ -75,3 +75,20 @@ The volume-weighted average price (VWAP) is a trading benchmark used by traders 
     "reason": "Type has to be either subscribe or unsubscribe"
 }
 ```
+
+- Match type message
+
+```json
+{
+    "type": "match",
+    "trade_id": 165850138,
+    "maker_order_id": "41e0e6f8-7aa7-4f99-9f1a-fbaf99f9a66b",
+    "taker_order_id": "0d611470-1c11-457c-9c92-02ad4c026268",
+    "side": "sell",
+    "size": "0.05",
+    "price": "3438.23",
+    "product_id": "ETH-USD",
+    "sequence": 21661080566,
+    "time": "2021-10-13T14:23:38.231856Z"
+}
+```
