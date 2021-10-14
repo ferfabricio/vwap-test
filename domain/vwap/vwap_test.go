@@ -66,6 +66,17 @@ func TestVWAPCalcalationResult(t *testing.T) {
 			},
 			expResult: 3438.221429,
 		},
+		{
+			length: 2,
+			dps: []DataPoint{
+				{Price: 3438.23, Quantity: 0.05},
+				{Price: 3438.16, Quantity: 0.06},
+				{Price: 3438.22, Quantity: 0.07},
+				{Price: 3438.22, Quantity: 0.08},
+				{Price: 3438.26, Quantity: 0.09},
+			},
+			expResult: 3438.241699,
+		},
 	}
 	for _, s := range sc {
 		v := Vwap{
@@ -80,7 +91,7 @@ func TestVWAPCalcalationResult(t *testing.T) {
 			}
 		}
 		if vf, _ := v.GetResult(currencies.BitcoinDollar); vf != s.expResult {
-			t.Errorf("expected result different from calculated %f", vf)
+			t.Errorf("expected result %f, is different from calculated %f", s.expResult, vf)
 		}
 	}
 }

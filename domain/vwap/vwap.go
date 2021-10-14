@@ -1,7 +1,6 @@
 package vwap
 
 import (
-	"container/list"
 	"errors"
 )
 
@@ -19,7 +18,7 @@ type CalculationUnit struct {
 	TotalPricePlusQuantity float32
 	TotalQuantity          float32
 	Result                 float32
-	DataPoints             list.List
+	DataPoints             []DataPoint
 }
 
 type Vwap struct {
@@ -32,7 +31,7 @@ func (v Vwap) AddPair(key string) {
 		TotalPricePlusQuantity: 0.0,
 		TotalQuantity:          0.0,
 		Result:                 0.0,
-		DataPoints:             *list.New(),
+		DataPoints:             []DataPoint{},
 	}
 }
 
@@ -40,15 +39,14 @@ func calculateVwapResult(tp float32, tq float32) float32 {
 	return tp / tq
 }
 
-func calculateTotalsInPair(p CalculationUnit, dp DataPoint, l int) CalculationUnit {
-	if p.DataPoints.Len() >= l {
-		f := p.DataPoints.Front()
-		fv := f.Value.(DataPoint)
-		p.TotalPricePlusQuantity -= (fv.Price * fv.Quantity)
-		p.TotalQuantity -= fv.Quantity
-		p.DataPoints.Remove(f)
+func calculateTotalsInPair(p *CalculationUnit, dp DataPoint, l int) *CalculationUnit {
+	if len(p.DataPoints) == l {
+		f, pda := p.DataPoints[0], p.DataPoints[1:]
+		p.TotalPricePlusQuantity -= (f.Price * f.Quantity)
+		p.TotalQuantity -= f.Quantity
+		p.DataPoints = pda
 	}
-	p.DataPoints.PushBack(dp)
+	p.DataPoints = append(p.DataPoints, dp)
 	p.TotalPricePlusQuantity += (dp.Price * dp.Quantity)
 	p.TotalQuantity += dp.Quantity
 	p.Result = calculateVwapResult(p.TotalPricePlusQuantity, p.TotalQuantity)
@@ -66,7 +64,7 @@ func (v Vwap) AddTrade(key string, price float32, quantity float32) error {
 		Quantity: quantity,
 	}
 
-	v.Pairs[key] = calculateTotalsInPair(p, dp, v.Length)
+	v.Pairs[key] = *calculateTotalsInPair(&p, dp, v.Length)
 	return nil
 }
 
