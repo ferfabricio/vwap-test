@@ -26,7 +26,7 @@ func TestAddTrade(t *testing.T) {
 			t.Error(err)
 		}
 		p := v.Pairs[BitcoinDollar]
-		if p.TotalPrice != 3438.23 && p.TotalQuantity != 0.05 {
+		if p.TotalPricePlusQuantity != 171.9115 || p.TotalQuantity != 0.05 {
 			t.Fail()
 		}
 	})
